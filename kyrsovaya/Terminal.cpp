@@ -7,15 +7,17 @@
 #include "Print.h"
 
 void Terminal::addOperator(const std::string& name) {
-    operators.push_back(name);
+    // Проверка на дубликат
+    if (std::find(operators.begin(), operators.end(), name) == operators.end()) {
+        operators.push_back(name);
 
-    std::ofstream opsFile("data/Operators.dat", std::ios::app);
-    if (opsFile.is_open()) {
-        opsFile << name << "\n";
-        opsFile.close();
-    }
-    else {
-        std::cerr << "Не удалось открыть файл Operators.dat для записи!\n";
+        // Полная перезапись файла
+        std::ofstream opsFile("data/Operators.dat");
+        if (opsFile.is_open()) {
+            for (const auto& op : operators) {
+                opsFile << op << "\n";
+            }
+        }
     }
 }
 
@@ -24,15 +26,12 @@ void Terminal::removeOperator(const std::string& name) {
     if (it != operators.end()) {
         operators.erase(it, operators.end());
 
+        // Полная перезапись файла
         std::ofstream opsFile("data/Operators.dat");
         if (opsFile.is_open()) {
             for (const auto& op : operators) {
                 opsFile << op << "\n";
             }
-            opsFile.close();
-        }
-        else {
-            std::cerr << "Не удалось открыть файл Operators.dat для записи!\n";
         }
     }
 }
@@ -47,7 +46,11 @@ void Terminal::printReceipt(const Payment& payment) const {
 }
 
 void Terminal::showOperators() const {
-    Print::printOperators(operators);
+    setlocale(LC_ALL, "Russian");
+    std::cout << "\nДоступные операторы:\n";
+    for (size_t i = 0; i < operators.size(); ++i) {
+        std::cout << i + 1 << ". " << operators[i] << "\n";
+    }
 }
 
 void Terminal::showPaymentHistory() const {

@@ -3,6 +3,7 @@
 #include <string>
 #include <limits>
 #include <locale>
+#include <iomanip>
 
 int Menu::mainMenu() {
     int choice;
@@ -106,4 +107,45 @@ double Menu::inputAmount() {
     } while (true);
 
     return amount;
+}
+
+double Menu::acceptCash(double requiredAmount) {
+    double cashReceived = 0.0;
+    double remaining = requiredAmount;
+
+    std::cout << "\n=== ПРИЁМ НАЛИЧНЫХ ===\n";
+    std::cout << "Требуемая сумма: " << std::fixed << std::setprecision(2)
+        << requiredAmount << " руб.\n";
+
+    do {
+        double payment;
+        std::cout << "Введите сумму (осталось внести: "
+            << std::fixed << std::setprecision(2) << remaining << " руб.): ";
+        std::cin >> payment;
+
+        if (std::cin.fail() || payment <= 0) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Неверная сумма! Попробуйте снова.\n";
+            continue;
+        }
+
+        cashReceived += payment;
+        remaining = requiredAmount - cashReceived;
+
+        if (remaining > 0) {
+            std::cout << "Внесено: " << std::fixed << std::setprecision(2)
+                << cashReceived << " руб. Осталось внести: "
+                << remaining << " руб.\n";
+        }
+    } while (remaining > 0);
+
+    if (cashReceived > requiredAmount) {
+        double change = cashReceived - requiredAmount;
+        std::cout << "Вы внесли больше требуемой суммы. Сдача: "
+            << std::fixed << std::setprecision(2) << change << " руб.\n";
+    }
+
+    std::cout << "Оплата принята. Спасибо!\n";
+    return cashReceived;
 }

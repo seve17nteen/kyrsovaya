@@ -1,32 +1,47 @@
 ﻿#include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <locale>
-#include <clocale>
 #include "Terminal.h"
 #include "Menu.h"
 
 int main() {
-    // Настройка локали для корректного отображения русского языка
     setlocale(LC_ALL, "Russian");
-    std::locale::global(std::locale(""));
+    system("chcp 1251 > nul");
+#ifdef _WIN32
+    system("chcp 1251 > nul"); // Устанавливаем кодировку Windows-1251
+#endif
 
     Terminal terminal;
 
-    // Загрузка операторов из файла
+    // Загрузка операторов с проверкой
+    std::cout << "=== ЗАГРУЗКА ОПЕРАТОРОВ ===\n";
     std::ifstream opsFile("data/Operators.dat");
     if (opsFile.is_open()) {
         std::string line;
         while (std::getline(opsFile, line)) {
             if (!line.empty()) {
                 terminal.addOperator(line);
+                std::cout << "Загружен оператор: " << line << "\n";
             }
         }
         opsFile.close();
     }
     else {
-        std::cerr << "Не удалось открыть файл Operators.dat!\n";
+        std::cerr << "Файл операторов не найден! Будет создан новый.\n";
+
+        // Создаем файл с операторами по умолчанию
+        std::ofstream newOpsFile("data/Operators.dat");
+        if (newOpsFile) {
+            newOpsFile << "МТС\nБилайн\nМегафон\nTele2\n";
+            terminal.addOperator("МТС");
+            terminal.addOperator("Билайн");
+            terminal.addOperator("Мегафон");
+            terminal.addOperator("Tele2");
+        }
     }
 
+    // Главное меню
     int mainChoice;
     do {
         mainChoice = Menu::mainMenu();
@@ -84,6 +99,13 @@ int main() {
                         break;
                     }
 
+                    // Приём наличных
+                    double amountToPay = payment.getAmount() + payment.getCommission();
+                    std::cout << "К оплате: " << std::fixed << std::setprecision(2)
+                        << amountToPay << " руб. (включая комиссию)\n";
+
+                    Menu::acceptCash(amountToPay);
+
                     payment.setPaymentTime(std::time(nullptr));
                     terminal.processPayment(payment);
                     terminal.printReceipt(payment);
@@ -107,7 +129,7 @@ int main() {
                 case 1: { // Добавить оператора
                     std::string newOperator;
                     std::cout << "Введите название оператора: ";
-                    std::cin.ignore(); // Очистка буфера перед вводом строки
+                    std::cin.ignore();
                     std::getline(std::cin, newOperator);
                     terminal.addOperator(newOperator);
                     break;
@@ -150,6 +172,10 @@ int main() {
             break;
         }
     } while (mainChoice != 4);
+
+    // Пауза перед завершением
+    std::cout << "Нажмите Enter для выхода...";
+    std::cin.ignore();
     std::cin.get();
     return 0;
 }
